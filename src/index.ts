@@ -16,6 +16,7 @@ serve(
   {
     fetch: app.fetch,
     port: config.port,
+    hostname: "0.0.0.0",
   },
   (info) => {
     console.log(`free-open-router listening on http://localhost:${info.port}`);
