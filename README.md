@@ -1,6 +1,6 @@
 # free-open-router
 
-**[Live Playground](https://free-open-router.onrender.com/playground)**
+**[Live Playground](https://free-open-router.onrender.com/)**
 
 A lightweight OpenRouter proxy service built with **TypeScript + Hono + Zod**, providing three core endpoints:
 
@@ -43,7 +43,7 @@ The service listens on `http://localhost:3000` by default.
 Open the playground at:
 
 ```
-http://localhost:3000/playground
+http://localhost:3000/
 ```
 
 ## Environment Variables
@@ -61,7 +61,7 @@ http://localhost:3000/playground
 
 ## API
 
-### `GET /v1/models/free`
+### `GET /api/v1/models/free`
 
 Returns the current list of free models.
 
@@ -72,10 +72,10 @@ Optional query parameter:
 Example:
 
 ```bash
-curl http://localhost:3000/v1/models/free
+curl http://localhost:3000/api/v1/models/free
 ```
 
-### `POST /v1/chat/completions/strongest`
+### `POST /api/v1/chat/completions/strongest`
 
 Forwards requests to OpenRouter's `openrouter/auto`, which automatically selects the strongest/most suitable model.
 
@@ -84,7 +84,7 @@ The request body is compatible with OpenAI / OpenRouter chat completions format.
 Example:
 
 ```bash
-curl http://localhost:3000/v1/chat/completions/strongest \
+curl http://localhost:3000/api/v1/chat/completions/strongest \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [
@@ -93,14 +93,14 @@ curl http://localhost:3000/v1/chat/completions/strongest \
   }'
 ```
 
-### `POST /v1/chat/completions/free`
+### `POST /api/v1/chat/completions/free`
 
 Access a specified free model. The request body must include a `model` field. The service validates that the model is currently free before forwarding to OpenRouter.
 
 Example:
 
 ```bash
-curl http://localhost:3000/v1/chat/completions/free \
+curl http://localhost:3000/api/v1/chat/completions/free \
   -H "Content-Type: application/json" \
   -d '{
     "model": "deepseek/deepseek-chat-v3-0324:free",
@@ -114,9 +114,9 @@ curl http://localhost:3000/v1/chat/completions/free \
 
 | Endpoint | Description |
 | --- | --- |
-| `GET /` | API route summary |
-| `GET /healthz` | Health check |
-| `GET /playground` | Built-in Web UI for testing |
+| `GET /` | Built-in Playground UI |
+| `GET /api` | API route summary |
+| `GET /api/healthz` | Health check |
 
 ## Notes
 

@@ -550,10 +550,10 @@ export function renderPlaygroundHtml(config: AppConfig): string {
           </div>
         </div>
         <nav class="nav">
-          <a href="/">API <code>/</code></a>
-          <a href="/healthz">Health <code>/healthz</code></a>
-          <a href="/playground">Playground <code>/playground</code></a>
-          <a href="/SKILL.md">Agent Skill <code>/SKILL.md</code></a>
+          <a href="/api">API <code>/api</code></a>
+          <a href="/api/healthz">Health <code>/api/healthz</code></a>
+          <a href="/">Playground <code>/</code></a>
+          <a href="/api/SKILL.md">Agent Skill <code>/api/SKILL.md</code></a>
         </nav>
       </header>
 
@@ -566,8 +566,8 @@ export function renderPlaygroundHtml(config: AppConfig): string {
           </p>
           <div class="hero-meta">
             <div class="meta-chip">Base URL <code>${escapeHtml(baseUrl)}</code></div>
-            <div class="meta-chip">Free Models <code>GET /v1/models/free</code></div>
-            <div class="meta-chip">Strongest <code>POST /v1/chat/completions/strongest</code></div>
+            <div class="meta-chip">Free Models <code>GET /api/v1/models/free</code></div>
+            <div class="meta-chip">Strongest <code>POST /api/v1/chat/completions/strongest</code></div>
           </div>
         </section>
 
@@ -591,14 +591,14 @@ export function renderPlaygroundHtml(config: AppConfig): string {
       </section>
 
       <div class="note" style="margin-top: 16px;">
-        <strong>For AI Agents:</strong> Read the <a href="/SKILL.md"><code>/SKILL.md</code></a> to learn how to use this API as a tool. It contains complete endpoint documentation, usage workflow, and examples for integrating with your agent.
+        <strong>For AI Agents:</strong> Read the <a href="/api/SKILL.md"><code>/api/SKILL.md</code></a> to learn how to use this API as a tool. It contains complete endpoint documentation, usage workflow, and examples for integrating with your agent.
       </div>
 
       <section class="stack">
         <article class="panel">
           <div class="panel-head">
             <div>
-              <div class="route">GET /v1/models/free</div>
+              <div class="route">GET /api/v1/models/free</div>
               <h2>Free Model List</h2>
             </div>
             <div class="toolbar">
@@ -625,7 +625,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
           <article class="panel">
             <div class="panel-head">
               <div>
-                <div class="route">POST /v1/chat/completions/strongest</div>
+                <div class="route">POST /api/v1/chat/completions/strongest</div>
                 <h2>Strongest Auto-Routing</h2>
               </div>
               <button id="send-strongest" type="button">Send Request</button>
@@ -655,7 +655,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
           <article class="panel">
             <div class="panel-head">
               <div>
-                <div class="route">POST /v1/chat/completions/free</div>
+                <div class="route">POST /api/v1/chat/completions/free</div>
                 <h2>Free Model Chat</h2>
               </div>
               <button id="send-free" type="button">Send Request</button>
@@ -804,6 +804,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
         }
 
         function renderModelsSummary(models) {
+          if (!els.modelsList) return;
           if (!models.length) {
             els.modelsList.textContent = "No free models found. Check your API key permissions, upstream status, or filter results.";
             return;
@@ -840,7 +841,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
 
           try {
             const query = forceRefresh ? "?refresh=1" : "";
-            const result = await requestJson("/v1/models/free" + query);
+            const result = await requestJson("/api/v1/models/free" + query);
             els.modelsOutput.textContent = pretty(result.payload);
             els.modelsMeta.textContent = "HTTP " + result.status;
 
@@ -885,7 +886,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
               ],
             };
 
-            const result = await requestJson("/v1/chat/completions/strongest", {
+            const result = await requestJson("/api/v1/chat/completions/strongest", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -936,7 +937,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
               ],
             };
 
-            const result = await requestJson("/v1/chat/completions/free", {
+            const result = await requestJson("/api/v1/chat/completions/free", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

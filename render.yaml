@@ -24,4 +24,4 @@ services:
         value: https://free-open-router.onrender.com
       - key: CORS_ORIGIN
         value: "*"
-    healthCheckPath: /healthz
+    healthCheckPath: /api/healthz

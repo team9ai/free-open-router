@@ -63,12 +63,12 @@ function createRouteSummary(config: AppConfig) {
     validation: "zod",
     openrouter_base_url: config.openRouterBaseUrl,
     endpoints: {
-      health: "GET /healthz",
-      playground: "GET /playground",
-      skill: "GET /SKILL.md",
-      free_models: "GET /v1/models/free",
-      strongest_chat: "POST /v1/chat/completions/strongest",
-      free_chat: "POST /v1/chat/completions/free",
+      playground: "GET /",
+      health: "GET /api/healthz",
+      skill: "GET /api/SKILL.md",
+      free_models: "GET /api/v1/models/free",
+      strongest_chat: "POST /api/v1/chat/completions/strongest",
+      free_chat: "POST /api/v1/chat/completions/free",
     },
   };
 }
@@ -79,9 +79,16 @@ export function createApp(config: AppConfig, fetchImpl: typeof fetch = fetch) {
 
   app.use("*", cors({ origin: config.corsOrigin }));
 
-  app.get("/", (c) => c.json(createRouteSummary(config)));
+  app.get("/", (c) =>
+    c.html(renderPlaygroundHtml(config), 200, {
+      "Cache-Control": "no-store, max-age=0",
+      Pragma: "no-cache",
+    }),
+  );
 
-  app.get("/SKILL.md", (c) => {
+  app.get("/api", (c) => c.json(createRouteSummary(config)));
+
+  app.get("/api/SKILL.md", (c) => {
     const content = readFileSync(join(projectRoot, "SKILL.md"), "utf-8");
     return c.text(content, 200, {
       "Content-Type": "text/markdown; charset=utf-8",
@@ -89,21 +96,14 @@ export function createApp(config: AppConfig, fetchImpl: typeof fetch = fetch) {
     });
   });
 
-  app.get("/playground", (c) =>
-    c.html(renderPlaygroundHtml(config), 200, {
-      "Cache-Control": "no-store, max-age=0",
-      Pragma: "no-cache",
-    }),
-  );
-
-  app.get("/healthz", (c) =>
+  app.get("/api/healthz", (c) =>
     c.json({
       ok: true,
       service: "free-open-router",
     }),
   );
 
-  app.get("/v1/models/free", async (c) => {
+  app.get("/api/v1/models/free", async (c) => {
     const query = validateWithSchema(refreshQuerySchema, c.req.query());
     const forceRefresh = query.refresh === "1" || query.refresh === "true";
     const result = await client.listFreeModels({ forceRefresh });
@@ -120,7 +120,7 @@ export function createApp(config: AppConfig, fetchImpl: typeof fetch = fetch) {
     });
   });
 
-  app.post("/v1/chat/completions/strongest", async (c) => {
+  app.post("/api/v1/chat/completions/strongest", async (c) => {
     const body = validateWithSchema(
       strongestCompletionSchema,
       await readJsonBody(c),
@@ -132,7 +132,7 @@ export function createApp(config: AppConfig, fetchImpl: typeof fetch = fetch) {
       throw new HttpError(503, "No free models are currently available.");
     }
 
-    const freeModelIds = freeModels.models.map((m) => m.id);
+    const freeModelIds = freeModels.models.slice(0, 3).map((m) => m.id);
 
     return client.proxyChatCompletion({
       ...rest,
@@ -140,7 +140,7 @@ export function createApp(config: AppConfig, fetchImpl: typeof fetch = fetch) {
     });
   });
 
-  app.post("/v1/chat/completions/free", async (c) => {
+  app.post("/api/v1/chat/completions/free", async (c) => {
     const body = validateWithSchema(
       freeCompletionSchema,
       await readJsonBody(c),

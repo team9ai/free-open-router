@@ -94,11 +94,11 @@ function createMockFetch() {
   return { calls, mockFetch };
 }
 
-test("GET /v1/models/free only returns free models", async () => {
+test("GET /api/v1/models/free only returns free models", async () => {
   const { mockFetch } = createMockFetch();
   const app = createApp(createMockConfig(), mockFetch);
 
-  const response = await app.request("http://localhost/v1/models/free");
+  const response = await app.request("http://localhost/api/v1/models/free");
   const payload = (await response.json()) as {
     data: Array<{ id: string; is_free: boolean }>;
     meta: { count: number };
@@ -110,24 +110,24 @@ test("GET /v1/models/free only returns free models", async () => {
   assert.equal(payload.data[0]?.is_free, true);
 });
 
-test("GET /playground returns the built-in test UI", async () => {
+test("GET / returns the built-in playground UI", async () => {
   const { mockFetch } = createMockFetch();
   const app = createApp(createMockConfig(), mockFetch);
 
-  const response = await app.request("http://localhost/playground");
+  const response = await app.request("http://localhost/");
   const html = await response.text();
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /text\/html/i);
   assert.match(html, /free-open-router playground/i);
-  assert.match(html, /\/v1\/chat\/completions\/strongest/i);
+  assert.match(html, /\/api\/v1\/chat\/completions\/strongest/i);
 });
 
-test("POST /v1/chat/completions/strongest routes to free models only", async () => {
+test("POST /api/v1/chat/completions/strongest routes to free models only", async () => {
   const { calls, mockFetch } = createMockFetch();
   const app = createApp(createMockConfig(), mockFetch);
 
-  const response = await app.request("http://localhost/v1/chat/completions/strongest", {
+  const response = await app.request("http://localhost/api/v1/chat/completions/strongest", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -153,11 +153,11 @@ test("POST /v1/chat/completions/strongest routes to free models only", async () 
   assert.equal(payload.model, "deepseek/deepseek-chat-v3-0324:free");
 });
 
-test("POST /v1/chat/completions/free rejects non-free models", async () => {
+test("POST /api/v1/chat/completions/free rejects non-free models", async () => {
   const { mockFetch } = createMockFetch();
   const app = createApp(createMockConfig(), mockFetch);
 
-  const response = await app.request("http://localhost/v1/chat/completions/free", {
+  const response = await app.request("http://localhost/api/v1/chat/completions/free", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -173,11 +173,47 @@ test("POST /v1/chat/completions/free rejects non-free models", async () => {
   assert.match(payload.error.message, /not currently a free OpenRouter model/i);
 });
 
-test("POST /v1/chat/completions/free proxies allowed free models", async () => {
+test("GET /api returns route summary JSON", async () => {
   const { mockFetch } = createMockFetch();
   const app = createApp(createMockConfig(), mockFetch);
 
-  const response = await app.request("http://localhost/v1/chat/completions/free", {
+  const response = await app.request("http://localhost/api");
+  const payload = (await response.json()) as { name: string; endpoints: Record<string, string> };
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.name, "free-open-router");
+  assert.ok(payload.endpoints);
+});
+
+test("GET /api/healthz returns ok", async () => {
+  const { mockFetch } = createMockFetch();
+  const app = createApp(createMockConfig(), mockFetch);
+
+  const response = await app.request("http://localhost/api/healthz");
+  const payload = (await response.json()) as { ok: boolean; service: string };
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.ok, true);
+  assert.equal(payload.service, "free-open-router");
+});
+
+test("GET /api/SKILL.md returns markdown", async () => {
+  const { mockFetch } = createMockFetch();
+  const app = createApp(createMockConfig(), mockFetch);
+
+  const response = await app.request("http://localhost/api/SKILL.md");
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /text\/markdown/i);
+  const text = await response.text();
+  assert.match(text, /free-open-router/i);
+});
+
+test("POST /api/v1/chat/completions/free proxies allowed free models", async () => {
+  const { mockFetch } = createMockFetch();
+  const app = createApp(createMockConfig(), mockFetch);
+
+  const response = await app.request("http://localhost/api/v1/chat/completions/free", {
     method: "POST",
     headers: {
       "content-type": "application/json",
