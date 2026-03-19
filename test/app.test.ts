@@ -68,12 +68,13 @@ function createMockFetch() {
     if (url.endsWith("/chat/completions")) {
       const body = JSON.parse(String(init?.body ?? "{}")) as {
         model?: string;
+        models?: string[];
       };
 
       return Response.json({
         id: "chatcmpl-mock",
         object: "chat.completion",
-        model: body.model,
+        model: body.model ?? body.models?.[0],
         choices: [
           {
             index: 0,
@@ -122,7 +123,7 @@ test("GET /playground returns the built-in test UI", async () => {
   assert.match(html, /\/v1\/chat\/completions\/strongest/i);
 });
 
-test("POST /v1/chat/completions/strongest forces openrouter auto routing", async () => {
+test("POST /v1/chat/completions/strongest routes to free models only", async () => {
   const { calls, mockFetch } = createMockFetch();
   const app = createApp(createMockConfig(), mockFetch);
 
@@ -140,11 +141,16 @@ test("POST /v1/chat/completions/strongest forces openrouter auto routing", async
   const upstreamChatCall = calls.find((call) => call.url.endsWith("/chat/completions"));
   const upstreamBody = JSON.parse(String(upstreamChatCall?.init?.body ?? "{}")) as {
     model?: string;
+    models?: string[];
   };
 
   assert.equal(response.status, 200);
-  assert.equal(payload.model, "openrouter/auto");
-  assert.equal(upstreamBody.model, "openrouter/auto");
+  assert.equal(upstreamBody.model, undefined);
+  assert.ok(Array.isArray(upstreamBody.models));
+  assert.ok(upstreamBody.models.length > 0);
+  assert.ok(upstreamBody.models.includes("deepseek/deepseek-chat-v3-0324:free"));
+  assert.ok(!upstreamBody.models.includes("openai/gpt-5.1"));
+  assert.equal(payload.model, "deepseek/deepseek-chat-v3-0324:free");
 });
 
 test("POST /v1/chat/completions/free rejects non-free models", async () => {

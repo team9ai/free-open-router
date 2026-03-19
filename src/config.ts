@@ -10,7 +10,7 @@ export interface AppConfig {
 }
 
 const DEFAULT_PORT = 3000;
-const DEFAULT_MODELS_CACHE_TTL_MS = 5 * 60 * 1000;
+const DEFAULT_MODELS_CACHE_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_UPSTREAM_TIMEOUT_MS = 60 * 1000;
 
 function parsePositiveNumber(rawValue: string | undefined, fallback: number): number {

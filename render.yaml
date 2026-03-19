@@ -17,7 +17,7 @@ services:
       - key: APP_NAME
         value: free-open-router
       - key: MODELS_CACHE_TTL_MS
-        value: "300000"
+        value: "3600000"
       - key: UPSTREAM_TIMEOUT_MS
         value: "60000"
       - key: SITE_URL

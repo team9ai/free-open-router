@@ -121,6 +121,48 @@ export function isZeroPrice(value: string | number | undefined): boolean {
   return Number.isFinite(parsed) && parsed === 0;
 }
 
+const PARAM_SIZE_RE = /(\d+(?:\.\d+)?)\s*[bB]/g;
+
+export function extractParamSize(model: OpenRouterModel): number | null {
+  const text = `${model.id} ${model.name ?? ""}`;
+  let max: number | null = null;
+  let match: RegExpExecArray | null;
+  while ((match = PARAM_SIZE_RE.exec(text)) !== null) {
+    if (match[1]) {
+      const val = parseFloat(match[1]);
+      if (max === null || val > max) max = val;
+    }
+  }
+  return max;
+}
+
+export function scoreModel(model: OpenRouterModel): number {
+  const params = extractParamSize(model);
+  const created = typeof model.created === "number" ? model.created : 0;
+  const contextLength =
+    typeof model.context_length === "number" ? model.context_length : 0;
+
+  // Normalize parameter size: log scale, cap at 1000B
+  // 1B -> 0, 100B -> 0.67, 1000B -> 1.0
+  const paramScore = params ? Math.log10(Math.min(params, 1000)) / 3 : 0;
+
+  // Normalize created timestamp: newer is better
+  // Range: 2023-01 (1672531200) to 2026-06 (1780000000), ~1.07e8 span
+  const minTs = 1_672_531_200;
+  const maxTs = 1_780_000_000;
+  const clampedTs = Math.max(minTs, Math.min(created, maxTs));
+  const recencyScore = (clampedTs - minTs) / (maxTs - minTs);
+
+  // Normalize context length: log scale, cap at 1M
+  // 4K -> 0.6, 32K -> 0.75, 128K -> 0.85, 1M -> 1.0
+  const ctxScore = contextLength > 0
+    ? Math.log2(Math.min(contextLength, 1_048_576)) / 20
+    : 0;
+
+  // Weighted sum: recency 50%, params 35%, context 15%
+  return recencyScore * 0.5 + paramScore * 0.35 + ctxScore * 0.15;
+}
+
 export function isFreeModel(model: OpenRouterModel): boolean {
   if (!model.pricing) {
     return false;
@@ -222,7 +264,7 @@ export function createOpenRouterClient(
       ...result,
       models: result.models
         .filter(isFreeModel)
-        .sort((left, right) => left.id.localeCompare(right.id))
+        .sort((left, right) => scoreModel(right) - scoreModel(left))
         .map((model) => ({
           ...model,
           is_free: true as const,

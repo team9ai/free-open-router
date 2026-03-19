@@ -124,12 +124,19 @@ export function createApp(config: AppConfig, fetchImpl: typeof fetch = fetch) {
     const body = validateWithSchema(
       strongestCompletionSchema,
       await readJsonBody(c),
-    ) as Record<string, unknown> & { models?: unknown };
-    const { models: _ignoredModels, ...rest } = body;
+    ) as Record<string, unknown> & { models?: unknown; model?: unknown };
+    const { models: _ignoredModels, model: _ignoredModel, ...rest } = body;
+
+    const freeModels = await client.listFreeModels();
+    if (freeModels.models.length === 0) {
+      throw new HttpError(503, "No free models are currently available.");
+    }
+
+    const freeModelIds = freeModels.models.map((m) => m.id);
 
     return client.proxyChatCompletion({
       ...rest,
-      model: "openrouter/auto",
+      models: freeModelIds,
     });
   });
 

@@ -1,7 +1,5 @@
 # free-open-router
 
-[中文文档](README.zh-CN.md) | English
-
 A lightweight OpenRouter proxy service built with **TypeScript + Hono + Zod**, providing three core endpoints:
 
 - List currently free models on OpenRouter
