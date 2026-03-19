@@ -12,7 +12,7 @@ try {
 const config = loadConfig();
 const app = createApp(config);
 
-serve(
+const server = serve(
   {
     fetch: app.fetch,
     port: config.port,
@@ -22,3 +22,7 @@ serve(
     console.log(`free-open-router listening on http://localhost:${info.port}`);
   },
 );
+
+// Prevent Render health-check "Connection reset by peer" errors.
+(server as import("node:http").Server).keepAliveTimeout = 120_000;
+(server as import("node:http").Server).headersTimeout = 120_000;
