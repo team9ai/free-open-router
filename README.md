@@ -1,5 +1,7 @@
 # free-open-router
 
+**[Live Playground](https://free-open-router.onrender.com/playground)**
+
 A lightweight OpenRouter proxy service built with **TypeScript + Hono + Zod**, providing three core endpoints:
 
 - List currently free models on OpenRouter
