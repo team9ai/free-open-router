@@ -24,7 +24,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
     null,
     2,
   );
-  const baseUrl = `http://localhost:${config.port}`;
+  const baseUrl = config.siteUrl || `http://localhost:${config.port}`;
 
   return `<!DOCTYPE html>
 <html lang="en">

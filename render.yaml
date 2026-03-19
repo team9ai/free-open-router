@@ -20,6 +20,8 @@ services:
         value: "300000"
       - key: UPSTREAM_TIMEOUT_MS
         value: "60000"
+      - key: SITE_URL
+        value: https://free-open-router.onrender.com
       - key: CORS_ORIGIN
         value: "*"
     healthCheckPath: /healthz
