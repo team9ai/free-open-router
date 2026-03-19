@@ -553,6 +553,7 @@ export function renderPlaygroundHtml(config: AppConfig): string {
           <a href="/">API <code>/</code></a>
           <a href="/healthz">Health <code>/healthz</code></a>
           <a href="/playground">Playground <code>/playground</code></a>
+          <a href="/SKILL.md">Agent Skill <code>/SKILL.md</code></a>
         </nav>
       </header>
 
@@ -588,6 +589,10 @@ export function renderPlaygroundHtml(config: AppConfig): string {
           </div>
         </aside>
       </section>
+
+      <div class="note" style="margin-top: 16px;">
+        <strong>For AI Agents:</strong> Read the <a href="/SKILL.md"><code>/SKILL.md</code></a> to learn how to use this API as a tool. It contains complete endpoint documentation, usage workflow, and examples for integrating with your agent.
+      </div>
 
       <section class="stack">
         <article class="panel">

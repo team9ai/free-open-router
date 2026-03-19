@@ -89,11 +89,11 @@ Optional fields (passed through to OpenRouter):
 - `stream` (boolean) — Enable streaming responses
 - Any other OpenRouter-compatible parameter
 
-### 4. Chat with the Strongest Model (Auto-Routed)
+### 4. Chat with the Strongest Free Model
 
 **`POST /v1/chat/completions/strongest`**
 
-Automatically routes to the strongest available model via OpenRouter's `openrouter/auto`. This endpoint ignores any `model` field you provide.
+Automatically selects the strongest free model based on a scoring system (recency 50%, parameter size 35%, context length 15%) and sends all ranked free models to OpenRouter. This endpoint ignores any `model` field you provide. **All models used are guaranteed free.**
 
 ```bash
 curl -X POST http://localhost:3000/v1/chat/completions/strongest \
@@ -108,7 +108,7 @@ curl -X POST http://localhost:3000/v1/chat/completions/strongest \
 Required fields:
 - `messages` (array) — At least one message with `role` and `content`
 
-> **Note:** This endpoint uses `openrouter/auto` which may route to paid models. The `/v1/chat/completions/free` endpoint is guaranteed free.
+> **Note:** This endpoint only uses free models. Models are ranked by release date, parameter count, and context window size.
 
 ### 5. Interactive Playground
 
@@ -176,6 +176,6 @@ Include conversation history in the `messages` array:
 ## Tips
 
 - Free model IDs typically end with `:free` suffix
-- The model list is cached for 5 minutes; use `refresh=1` only when needed
+- The model list is cached for 1 hour; use `refresh=1` only when needed
 - All requests support CORS, so you can call from browser-based apps
 - The proxy transparently forwards responses from OpenRouter, including token usage metadata
