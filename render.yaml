@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: free-open-router
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PORT
+        value: "10000"
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: APP_NAME
+        value: free-open-router
+      - key: MODELS_CACHE_TTL_MS
+        value: "300000"
+      - key: UPSTREAM_TIMEOUT_MS
+        value: "60000"
+      - key: CORS_ORIGIN
+        value: "*"
+    healthCheckPath: /healthz
