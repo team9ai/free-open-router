@@ -1,46 +1,40 @@
-# free-open-router Skill
+---
+name: free-open-router
+description: |
+  Proxy service providing free access to OpenRouter AI models. Supports listing free models,
+  chatting with a specific free model, and auto-routing to the strongest free model.
+  Use when making AI chat completions, listing available free models, or testing OpenRouter
+  endpoints without cost.
+compatibility: Requires a running free-open-router service (default https://free-open-router.onrender.com)
+---
 
-You have access to a **free-open-router** proxy service that provides free access to OpenRouter AI models. Use this skill to make AI chat completions through the proxy.
+# free-open-router
 
-## Base URL
+A lightweight OpenRouter proxy that exposes only free models. The base URL defaults to `https://free-open-router.onrender.com` (port may vary).
 
-```
-http://localhost:3000
-```
+## Workflow
 
-> The port may vary. If port 3000 doesn't work, check if the service is running on a different port.
+1. **Check health** — `GET /healthz` confirms the service is running
+2. **List free models** — `GET /v1/models/free` returns available models
+3. **Pick a model** — select a model ID (e.g., `deepseek/deepseek-chat-v3-0324:free`)
+4. **Send request** — `POST /v1/chat/completions/free` with the chosen model and messages
 
-## Available Endpoints
+For quick use without choosing a model, `POST /v1/chat/completions/strongest` auto-selects the best free model.
 
-### 1. Health Check
+## Endpoints
 
-**`GET /healthz`**
+### GET /healthz
 
-Verify the service is running before making requests.
+Returns service health status.
 
-```bash
-curl http://localhost:3000/healthz
-```
-
-Response:
 ```json
 { "ok": true, "service": "free-open-router" }
 ```
 
-### 2. List Free Models
+### GET /v1/models/free
 
-**`GET /v1/models/free`**
+Returns all currently available free models. Append `?refresh=1` to force a cache refresh.
 
-Get all currently available free models. Always check this first to know which models you can use.
-
-```bash
-curl http://localhost:3000/v1/models/free
-```
-
-Query parameters:
-- `refresh=1` — Force refresh the model cache (use sparingly)
-
-Response:
 ```json
 {
   "object": "list",
@@ -52,110 +46,51 @@ Response:
       "is_free": true
     }
   ],
-  "meta": {
-    "count": 5,
-    "fetched_at": "2024-03-19T10:30:45.123Z",
-    "cache_hit": true,
-    "stale": false
-  }
+  "meta": { "count": 5, "cache_hit": true, "stale": false }
 }
 ```
 
-### 3. Chat with a Free Model
+### POST /v1/chat/completions/free
 
-**`POST /v1/chat/completions/free`**
-
-Send a chat completion request using a specific free model. The model must be in the free models list.
+Sends a chat completion request using a specific free model. The proxy validates the model is free before forwarding.
 
 ```bash
-curl -X POST http://localhost:3000/v1/chat/completions/free \
+curl -X POST https://free-open-router.onrender.com/v1/chat/completions/free \
   -H "Content-Type: application/json" \
   -d '{
     "model": "deepseek/deepseek-chat-v3-0324:free",
-    "messages": [
-      { "role": "user", "content": "Hello, how are you?" }
-    ]
+    "messages": [{ "role": "user", "content": "Hello" }]
   }'
 ```
 
-Required fields:
-- `model` (string) — Must be a free model ID from `/v1/models/free`
-- `messages` (array) — At least one message with `role` and `content`
+| Field | Required | Description |
+|-------|----------|-------------|
+| `model` | Yes | A free model ID from `/v1/models/free` |
+| `messages` | Yes | Array of `{ role, content }` objects (min 1) |
+| `temperature` | No | Sampling temperature (0–2) |
+| `top_p` | No | Nucleus sampling parameter |
+| `max_tokens` | No | Maximum tokens to generate |
+| `stream` | No | Set `true` for SSE streaming |
 
-Optional fields (passed through to OpenRouter):
-- `temperature` (number) — Sampling temperature (0-2)
-- `top_p` (number) — Nucleus sampling parameter
-- `max_tokens` (number) — Maximum tokens to generate
-- `stream` (boolean) — Enable streaming responses
-- Any other OpenRouter-compatible parameter
+Any other OpenRouter-compatible field is passed through.
 
-### 4. Chat with the Strongest Free Model
+### POST /v1/chat/completions/strongest
 
-**`POST /v1/chat/completions/strongest`**
-
-Automatically selects the strongest free model based on a scoring system (recency 50%, parameter size 35%, context length 15%) and sends all ranked free models to OpenRouter. This endpoint ignores any `model` field you provide. **All models used are guaranteed free.**
+Auto-selects the strongest free model based on a scoring system (recency 50%, parameter size 35%, context length 15%). Any `model` field in the request body is ignored. All models used are guaranteed free.
 
 ```bash
-curl -X POST http://localhost:3000/v1/chat/completions/strongest \
+curl -X POST https://free-open-router.onrender.com/v1/chat/completions/strongest \
   -H "Content-Type: application/json" \
   -d '{
-    "messages": [
-      { "role": "user", "content": "Explain quantum computing" }
-    ]
+    "messages": [{ "role": "user", "content": "Explain quantum computing" }]
   }'
 ```
 
-Required fields:
-- `messages` (array) — At least one message with `role` and `content`
+Only `messages` (array, min 1) is required. Other fields follow the same schema as the free endpoint above.
 
-> **Note:** This endpoint only uses free models. Models are ranked by release date, parameter count, and context window size.
+### GET /playground
 
-### 5. Interactive Playground
-
-**`GET /playground`**
-
-Open in a browser to test the API interactively with a built-in UI.
-
-## Usage Workflow
-
-Follow this workflow when using the proxy:
-
-1. **Check health** — `GET /healthz` to confirm the service is up
-2. **List free models** — `GET /v1/models/free` to see available models
-3. **Pick a model** — Choose a model ID from the list (e.g., `deepseek/deepseek-chat-v3-0324:free`)
-4. **Send request** — `POST /v1/chat/completions/free` with your chosen model and messages
-
-## Error Handling
-
-| Status | Meaning | Action |
-|--------|---------|--------|
-| 400 | Invalid request or model not free | Check model ID and request body |
-| 404 | Endpoint not found | Check the URL path |
-| 500 | Server error or missing API key | Service configuration issue |
-
-Error response format:
-```json
-{
-  "error": {
-    "message": "Model xyz is not currently a free OpenRouter model.",
-    "details": null
-  }
-}
-```
-
-## Streaming Responses
-
-Set `"stream": true` in the request body to receive Server-Sent Events (SSE):
-
-```bash
-curl -X POST http://localhost:3000/v1/chat/completions/free \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek/deepseek-chat-v3-0324:free",
-    "messages": [{ "role": "user", "content": "Tell me a story" }],
-    "stream": true
-  }'
-```
+Opens a browser-based UI for interactive testing.
 
 ## Multi-turn Conversations
 
@@ -173,9 +108,28 @@ Include conversation history in the `messages` array:
 }
 ```
 
+## Error Handling
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| 400 | Invalid request or model not free | Check model ID and request body |
+| 404 | Endpoint not found | Verify the URL path |
+| 500 | Server error or missing API key | Check service configuration |
+
+Error response format:
+
+```json
+{
+  "error": {
+    "message": "Model xyz is not currently a free OpenRouter model.",
+    "details": null
+  }
+}
+```
+
 ## Tips
 
-- Free model IDs typically end with `:free` suffix
-- The model list is cached for 1 hour; use `refresh=1` only when needed
-- All requests support CORS, so you can call from browser-based apps
-- The proxy transparently forwards responses from OpenRouter, including token usage metadata
+- Free model IDs typically end with `:free`
+- The model list is cached for 1 hour; use `?refresh=1` only when needed
+- All endpoints support CORS
+- Responses are transparently forwarded from OpenRouter, including token usage metadata
