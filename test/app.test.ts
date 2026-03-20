@@ -121,6 +121,7 @@ test("GET / returns the built-in playground UI", async () => {
   assert.match(response.headers.get("content-type") ?? "", /text\/html/i);
   assert.match(html, /free-open-router playground/i);
   assert.match(html, /\/api\/v1\/chat\/completions\/strongest/i);
+  assert.match(html, /https:\/\/github\.com\/team9ai\/free-open-router/i);
 });
 
 test("POST /api/v1/chat/completions/strongest routes to free models only", async () => {
